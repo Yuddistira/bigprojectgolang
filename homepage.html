@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo=">
+<title>Big Project tech-0318</title>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.21.0/moment.min.js"></script>
+</head>
+
+<body>
+    <div>
+        <table id="data-content">
+                <thead>
+                        <tr>
+                            <td>ID</td>
+                            <td>Name</td>
+                            <td>MSIDN</td>
+                            <td>Email</td>
+                            <td>birth_date</td>
+                            <td>created_time</td>
+                            <td>update_time</td>
+                            <td>user_age</td>
+                        </tr>
+                    </thead>
+            <tbody id="data-body">
+
+            </tbody>
+        </table>
+    </div>
+    <div>
+            <input type="text" id="name-filter" />
+    </div>
+    <p>
+        Visitors : <span id="visitor-count"> 0 </span>
+    </p>
+<script>
+        
+        // get visitor count
+        $.ajax({
+                url: "http://localhost:8080/v1/getVisitor",
+                method: "GET",
+                dataType: "json"
+            }).then(function (respJson) {
+            document.getElementById("visitor-count").innerHTML = respJson
+        }, function (reason) {
+            console.log("error when request getVisitor", reason);
+        })
+
+
+        // get user
+        function getUserData() {
+            let url = new URL('http://localhost:8080/v1/getUser');
+            if (this.value != null && this.value != "") {
+                url.searchParams.append("nameInput", this.value.toLowerCase())
+            }
+
+            $.ajax({
+                url: url,
+                method: "GET",
+                dataType: "json"
+            }).then(function (respJson) {
+                $("#data-body").empty();
+                for (var i = 0; i < respJson.length; i++) {
+                    var tr = document.createElement('tr');
+                    add(tr, respJson[i].ID)
+                    add(tr, dataToCell(respJson[i].Name))
+                    add(tr, dataToCell(respJson[i].MSISDN))
+                    add(tr, dataToCell(respJson[i].Email))
+                    add(tr, dataToCell(respJson[i].BirthDate,"DD/MM/YYYY"))
+                    add(tr, dataToCell(respJson[i].CreateTime,"DD/MM/YYYY hh:mm:ss"))
+                    add(tr, dataToCell(respJson[i].UpdateTime,"DD/MM/YYYY hh:mm:ss"))
+                    $("#data-content").append(tr);
+                }
+        }, function (reason) {
+            console.log("error when request getUserData", reason);
+        })
+        }
+        
+        function dataToCell(data,format) {
+            if (data.Valid) {
+                if(format!=null){
+                   return moment(data.Time).format(format)
+                }
+                return data.String
+            }
+            return ""
+        }
+
+        function add(row, value) {
+            var td = document.createElement('td');
+            td.appendChild(document.createTextNode(value));
+            row.appendChild(td);
+        }
+        
+        //inisialisasi data
+        getUserData()
+        document.getElementById("name-filter").addEventListener('keyup', getUserData);
+</script>
+</body>
+</html>
